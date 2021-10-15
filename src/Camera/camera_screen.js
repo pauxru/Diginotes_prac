@@ -1,4 +1,4 @@
-import React, {Component, createRef, useEffect} from 'react';
+import React, {Component} from 'react';
 import {
   Text,
   View,
@@ -12,15 +12,15 @@ import {
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import ActionSheet from 'react-native-actionsheet';
-import {useRef} from 'react/cjs/react.development';
 
-const actionSheetRef = createRef();
+// Dimensions for the screen, for use in relative positioning
 const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
 
+// for image size in the display on the flatlist. 3 columns of equal sized images
 const imageWidth = width / 3 - 6;
 
-export default class notesCapture extends Component {
+export default class imagePick extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -28,6 +28,7 @@ export default class notesCapture extends Component {
     };
   }
 
+  // Push images in the flatlist display. Will be used for storage and backup
   onSelectedImage = image => {
     let newDataImg = this.state.fileList;
     const source = {uri: image.path};
@@ -40,6 +41,8 @@ export default class notesCapture extends Component {
     this.setState((state = {fileList: newDataImg}));
   };
 
+  // Take photos using the camera and crop them before saving
+  // Can be used to take video and compress the image for storage
   takePhotoFromCamera = () => {
     ImagePicker.openCamera({
       width: 300,
@@ -51,6 +54,8 @@ export default class notesCapture extends Component {
     });
   };
 
+  // Choose images already on the phone with croping
+  // Will add multiple selection later using Async storage
   choosePhotFromLib = () => {
     ImagePicker.openPicker({
       width: 300,
@@ -62,6 +67,8 @@ export default class notesCapture extends Component {
     });
   };
 
+  // render the images for display after it is captured
+  // Saving errors will be handled here
   renderItem = ({item, index}) => {
     return (
       <View style={styles.imageplacement}>
@@ -70,25 +77,21 @@ export default class notesCapture extends Component {
     );
   };
 
+  // Actionsheet for options from below
+  // Animation parameters and functions is needed to handle its rendering
   showActionSheet = () => {
-    // const fadeAnim = useRef(new Animated.Value(0)).current;
-    // Animated.timing(fadeAnim, {
-    //   toValue: 1,
-    //   duration: 5000,
-    // }).start();
     this.ActionSheet.show();
   };
 
   render() {
-    // let actionSheet = useRef();
-    // let optionArray = ['Take Photo', 'Choose Photo Lib', 'Cancel'];
-    let {fileList} = this.state;
+    let {fileList} = this.state; // this will be used by Async storage to get
+    // mutilple files from the device or backup
 
     return (
       <SafeAreaView styles={styles.safeArea}>
         <View style={styles.flat}>
-          <FlatList
-            numColumns={3}
+          <FlatList // contains the aspects and characteristics of the list of images
+            numColumns={3} // explicit definition of the number of images on the width scaled by the size of the device
             style={styles.listContainer}
             data={fileList}
             renderItem={this.renderItem}
@@ -96,6 +99,7 @@ export default class notesCapture extends Component {
             extraData={this.state}
             //horizontal={true}
             ListEmptyComponent={
+              // For empty flat list content
               <View style={styles.emptyTxt}>
                 <Text style={{fontSize: 20}}>
                   Your Diginotes is currently Empty
@@ -112,12 +116,13 @@ export default class notesCapture extends Component {
             </TouchableOpacity>
           </View>
         </View>
+
         <Animated.View>
           <ActionSheet
             ref={o => (this.ActionSheet = o)}
-            title={'Where are your notes?'}
+            title={'Select one'}
             // message={'Where is your notes'}
-            options={['Take Photo', 'Choose Photo Lib', 'Cancel']}
+            options={['Take Photo', 'Choose from Gallery', 'Cancel']}
             cancelButtonIndex={2}
             //destructiveButtonIndex={1}
             onPress={index => {
